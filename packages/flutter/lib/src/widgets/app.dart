@@ -31,6 +31,7 @@ import 'shortcuts.dart';
 import 'tap_region.dart';
 import 'text.dart';
 import 'title.dart';
+import 'value_listenable_builder.dart';
 import 'widget_inspector.dart';
 
 export 'dart:ui' show Locale;
@@ -705,7 +706,12 @@ class WidgetsApp extends StatefulWidget {
   /// {@template flutter.widgets.widgetsApp.onNavigationNotification}
   /// The callback to use when receiving a [NavigationNotification].
   ///
-  /// By default this updates the engine with the navigation status.
+  /// By default this updates the engine with the navigation status and stops
+  /// bubbling the notification.
+  ///
+  /// See also:
+  ///
+  ///  * [NotificationListener.onNotification], which uses this callback.
   /// {@endtemplate}
   final NotificationListenerCallback<NavigationNotification>? onNavigationNotification;
 
@@ -1170,7 +1176,7 @@ class WidgetsApp extends StatefulWidget {
   final String? restorationScopeId;
 
   /// {@template flutter.widgets.widgetsApp.useInheritedMediaQuery}
-  /// Deprecated. This setting is not ignored.
+  /// Deprecated. This setting is now ignored.
   ///
   /// The widget never introduces its own [MediaQuery]; the [View] widget takes
   /// care of that.
@@ -1189,13 +1195,33 @@ class WidgetsApp extends StatefulWidget {
 
   /// If true, forces the widget inspector to be visible.
   ///
+  /// Deprecated.
+  /// Use WidgetsBinding.instance.debugShowWidgetInspectorOverrideNotifier.value
+  /// instead.
+  ///
+  /// Overrides the `debugShowWidgetInspector` value set in [WidgetsApp].
+  ///
   /// Used by the `debugShowWidgetInspector` debugging extension.
   ///
-  /// The inspector allows you to select a location on your device or emulator
+  /// The inspector allows the selection of a location on your device or emulator
   /// and view what widgets and render objects associated with it. An outline of
   /// the selected widget and some summary information is shown on device and
   /// more detailed information is shown in the IDE or DevTools.
-  static bool debugShowWidgetInspectorOverride = false;
+  @Deprecated(
+    'Use WidgetsBinding.instance.debugShowWidgetInspectorOverrideNotifier.value instead. '
+    'This feature was deprecated after v3.20.0-14.0.pre.',
+  )
+  static bool get debugShowWidgetInspectorOverride {
+    return WidgetsBinding.instance.debugShowWidgetInspectorOverrideNotifier.value;
+  }
+
+  @Deprecated(
+    'Use WidgetsBinding.instance.debugShowWidgetInspectorOverrideNotifier.value instead. '
+    'This feature was deprecated after v3.20.0-14.0.pre.',
+  )
+  static set debugShowWidgetInspectorOverride(bool value) {
+    WidgetsBinding.instance.debugShowWidgetInspectorOverrideNotifier.value = value;
+  }
 
   /// If false, prevents the debug banner from being visible.
   ///
@@ -1211,6 +1237,7 @@ class WidgetsApp extends StatefulWidget {
     SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
     SingleActivator(LogicalKeyboardKey.gameButtonA): ActivateIntent(),
+    SingleActivator(LogicalKeyboardKey.select): ActivateIntent(),
 
     // Dismissal
     SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
@@ -1683,6 +1710,7 @@ class _WidgetsAppState extends State<WidgetsApp> with WidgetsBindingObserver {
             },
           onUnknownRoute: _onUnknownRoute,
           observers: widget.navigatorObservers!,
+          routeTraversalEdgeBehavior: kIsWeb ? TraversalEdgeBehavior.leaveFlutterView : TraversalEdgeBehavior.parentScope,
           reportsRouteUpdateToEngine: true,
         ),
       );
@@ -1742,12 +1770,19 @@ class _WidgetsAppState extends State<WidgetsApp> with WidgetsBindingObserver {
     }
 
     assert(() {
-      if (widget.debugShowWidgetInspector || WidgetsApp.debugShowWidgetInspectorOverride) {
-        result = WidgetInspector(
-          selectButtonBuilder: widget.inspectorSelectButtonBuilder,
-          child: result,
-        );
-      }
+      result = ValueListenableBuilder<bool>(
+        valueListenable: WidgetsBinding.instance.debugShowWidgetInspectorOverrideNotifier,
+        builder: (BuildContext context, bool debugShowWidgetInspectorOverride, Widget? child) {
+          if (widget.debugShowWidgetInspector || debugShowWidgetInspectorOverride) {
+            return WidgetInspector(
+              selectButtonBuilder: widget.inspectorSelectButtonBuilder,
+              child: child!,
+            );
+          }
+          return child!;
+        },
+        child: result,
+      );
       if (widget.debugShowCheckedModeBanner && WidgetsApp.debugAllowBannerOverride) {
         result = CheckedModeBanner(
           child: result,

@@ -45,9 +45,6 @@ class FlutterFeatureFlags implements FeatureFlags {
   bool get areCustomDevicesEnabled => isEnabled(flutterCustomDevicesFeature);
 
   @override
-  bool get isFlutterWebWasmEnabled => isEnabled(flutterWebWasm);
-
-  @override
   bool get isCliAnimationEnabled {
     if (_platform.environment['TERM'] == 'dumb') {
       return false;
@@ -57,6 +54,9 @@ class FlutterFeatureFlags implements FeatureFlags {
 
   @override
   bool get isNativeAssetsEnabled => isEnabled(nativeAssets);
+
+  @override
+  bool get isPreviewDeviceEnabled => isEnabled(previewDevice);
 
   @override
   bool isEnabled(Feature feature) {

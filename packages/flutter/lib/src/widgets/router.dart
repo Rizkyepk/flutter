@@ -64,10 +64,7 @@ class RouteInformation {
     'This feature was deprecated after v3.8.0-3.0.pre.'
   )
   String get location {
-    if (_location != null) {
-      return _location;
-    }
-    return Uri.decodeComponent(
+    return _location ?? Uri.decodeComponent(
       Uri(
         path: uri.path.isEmpty ? '/' : uri.path,
         queryParameters: uri.queryParametersAll.isEmpty ? null : uri.queryParametersAll,
@@ -628,10 +625,17 @@ class _RouterState<T> extends State<Router<T>> with RestorationMixin {
     }
     assert(_currentIntentionToReport != null);
     _routeInformationReportingTaskScheduled = true;
-    SchedulerBinding.instance.addPostFrameCallback(_reportRouteInformation);
+    SchedulerBinding.instance.addPostFrameCallback(
+      _reportRouteInformation,
+      debugLabel: 'Router.reportRouteInfo',
+    );
   }
 
   void _reportRouteInformation(Duration timestamp) {
+    if (!mounted) {
+      return;
+    }
+
     assert(_routeInformationReportingTaskScheduled);
     _routeInformationReportingTaskScheduled = false;
 
@@ -726,6 +730,7 @@ class _RouterState<T> extends State<Router<T>> with RestorationMixin {
 
   @override
   void dispose() {
+    _routeInformation.dispose();
     widget.routeInformationProvider?.removeListener(_handleRouteInformationProviderNotification);
     widget.backButtonDispatcher?.removeCallback(_handleBackButtonDispatcherNotification);
     widget.routerDelegate.removeListener(_handleRouterDelegateNotification);
@@ -1554,10 +1559,7 @@ mixin PopNavigatorRouterDelegateMixin<T> on RouterDelegate<T> {
   @override
   Future<bool> popRoute() {
     final NavigatorState? navigator = navigatorKey?.currentState;
-    if (navigator == null) {
-      return SynchronousFuture<bool>(false);
-    }
-    return navigator.maybePop();
+    return navigator?.maybePop() ?? SynchronousFuture<bool>(false);
   }
 }
 

@@ -181,7 +181,7 @@ void main() {
         matching: find.byType(Material),
       ).first);
 
-      expect(dialogMaterial.color, theme.colorScheme.surface);
+      expect(dialogMaterial.color, theme.colorScheme.surfaceContainerHigh);
       expect(dialogMaterial.shadowColor, Colors.transparent);
       expect(dialogMaterial.surfaceTintColor, Colors.transparent);
       expect(dialogMaterial.elevation, 0.0);
@@ -201,7 +201,7 @@ void main() {
         matching: find.byType(Material),
       ).first);
 
-      expect(dialogMaterial.color, theme.colorScheme.surface);
+      expect(dialogMaterial.color, theme.colorScheme.surfaceContainerHigh);
       expect(dialogMaterial.shadowColor, Colors.transparent);
       expect(dialogMaterial.surfaceTintColor, Colors.transparent);
       expect(dialogMaterial.elevation, 0.0);
@@ -798,9 +798,9 @@ void main() {
           matching: find.byType(Material),
         ).first);
 
-        expect(dialogMaterial.color, theme.colorScheme.surface);
+        expect(dialogMaterial.color, theme.colorScheme.surfaceContainerHigh);
         expect(dialogMaterial.shadowColor, Colors.transparent);
-        expect(dialogMaterial.surfaceTintColor, theme.colorScheme.surfaceTint);
+        expect(dialogMaterial.surfaceTintColor, Colors.transparent);
         expect(dialogMaterial.elevation, 6.0);
         expect(
           dialogMaterial.shape,
@@ -1665,6 +1665,14 @@ class _RestorableDateRangePickerDialogTestWidgetState extends State<_RestorableD
       );
     },
   );
+
+  @override
+  void dispose() {
+    _startDate.dispose();
+    _endDate.dispose();
+    _restorableDateRangePickerRouteFuture.dispose();
+    super.dispose();
+  }
 
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {

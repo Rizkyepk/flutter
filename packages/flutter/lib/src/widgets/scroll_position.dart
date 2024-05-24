@@ -468,7 +468,7 @@ abstract class ScrollPosition extends ViewportOffset with ScrollMetrics {
     notifyListeners();
     SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
       _impliedVelocity = 0;
-    });
+    }, debugLabel: 'ScrollPosition.resetVelocity');
   }
 
   /// Called whenever scrolling ends, to store the current scroll offset in a
@@ -722,22 +722,12 @@ abstract class ScrollPosition extends ViewportOffset with ScrollMetrics {
   /// scroll view dimensions both change) and therefore shouldn't do anything
   /// expensive.
   void _updateSemanticActions() {
-    final SemanticsAction forward;
-    final SemanticsAction backward;
-    switch (axisDirection) {
-      case AxisDirection.up:
-        forward = SemanticsAction.scrollDown;
-        backward = SemanticsAction.scrollUp;
-      case AxisDirection.right:
-        forward = SemanticsAction.scrollLeft;
-        backward = SemanticsAction.scrollRight;
-      case AxisDirection.down:
-        forward = SemanticsAction.scrollUp;
-        backward = SemanticsAction.scrollDown;
-      case AxisDirection.left:
-        forward = SemanticsAction.scrollRight;
-        backward = SemanticsAction.scrollLeft;
-    }
+    final (SemanticsAction forward, SemanticsAction backward) = switch (axisDirection) {
+      AxisDirection.up    => (SemanticsAction.scrollDown, SemanticsAction.scrollUp),
+      AxisDirection.down  => (SemanticsAction.scrollUp, SemanticsAction.scrollDown),
+      AxisDirection.left  => (SemanticsAction.scrollRight, SemanticsAction.scrollLeft),
+      AxisDirection.right => (SemanticsAction.scrollLeft, SemanticsAction.scrollRight),
+    };
 
     final Set<SemanticsAction> actions = <SemanticsAction>{};
     if (pixels > minScrollExtent) {
@@ -795,9 +785,13 @@ abstract class ScrollPosition extends ViewportOffset with ScrollMetrics {
     Curve curve = Curves.ease,
     ScrollPositionAlignmentPolicy alignmentPolicy = ScrollPositionAlignmentPolicy.explicit,
     RenderObject? targetRenderObject,
-  }) {
+  }) async {
     assert(object.attached);
-    final RenderAbstractViewport viewport = RenderAbstractViewport.of(object);
+    final RenderAbstractViewport? viewport = RenderAbstractViewport.maybeOf(object);
+    // If no viewport is found, return.
+    if (viewport == null) {
+      return;
+    }
 
     Rect? targetRect;
     if (targetRenderObject != null && targetRenderObject != object) {
@@ -842,12 +836,12 @@ abstract class ScrollPosition extends ViewportOffset with ScrollMetrics {
     }
 
     if (target == pixels) {
-      return Future<void>.value();
+      return;
     }
 
     if (duration == Duration.zero) {
       jumpTo(target);
-      return Future<void>.value();
+      return;
     }
 
     return animateTo(target, duration: duration, curve: curve);

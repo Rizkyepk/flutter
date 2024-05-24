@@ -39,7 +39,7 @@ const double _kIndicatorHeight = 32;
 /// Adaptive layouts can build different instances of the [Scaffold] in order to
 /// have a navigation rail for more horizontal layouts and a bottom navigation
 /// bar for more vertical layouts. See
-/// [the adaptive_scaffold.dart sample](https://github.com/flutter/samples/blob/master/experimental/web_dashboard/lib/src/widgets/third_party/adaptive_scaffold.dart)
+/// [the adaptive_scaffold.dart sample](https://github.com/flutter/samples/blob/main/experimental/web_dashboard/lib/src/widgets/third_party/adaptive_scaffold.dart)
 /// for an example.
 ///
 /// {@tool dartpad}
@@ -782,6 +782,13 @@ class _RailDestination extends StatelessWidget {
     }
 
     final ColorScheme colors = Theme.of(context).colorScheme;
+    final bool primaryColorAlphaModified = colors.primary.alpha < 255.0;
+    final Color effectiveSplashColor = primaryColorAlphaModified
+      ? colors.primary
+      : colors.primary.withOpacity(0.12);
+    final Color effectiveHoverColor = primaryColorAlphaModified
+      ? colors.primary
+      : colors.primary.withOpacity(0.04);
     return Semantics(
       container: true,
       selected: selected,
@@ -793,8 +800,8 @@ class _RailDestination extends StatelessWidget {
               onTap: disabled ? null : onTap,
               borderRadius: BorderRadius.all(Radius.circular(minWidth / 2.0)),
               customBorder: indicatorShape,
-              splashColor: colors.primary.withOpacity(0.12),
-              hoverColor: colors.primary.withOpacity(0.04),
+              splashColor: effectiveSplashColor,
+              hoverColor: effectiveHoverColor,
               useMaterial3: material3,
               indicatorOffset: indicatorOffset,
               applyXOffset: applyXOffset,
